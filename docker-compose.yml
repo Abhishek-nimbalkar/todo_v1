@@ -1,0 +1,37 @@
+version: '3'
+services:
+  app:
+    container_name: todo_app
+    build: .
+    ports:
+      - '8899:8899'
+    # volumes:
+    #   - .:/app
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: on-failure
+  mongo:
+    image: mongo:6
+    container_name: todo_mongo
+    ports:
+      - '27017:27017'
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh mongo:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: on-failure
+  redis:
+    image: redis:latest
+    container_name: todo_redis
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: on-failure
